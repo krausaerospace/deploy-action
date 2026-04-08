@@ -1,0 +1,50 @@
+name: "Deploy"
+description: "Updates a hash value in a Pulumi YAML file within the infrastructure repository."
+inputs:
+  component_name:
+    description: "The name of the component to update (e.g., command)"
+    required: true
+  ssh_key:
+    description: "SSH key for checking out the infrastructure repo"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get hash
+      id: get_hash
+      shell: bash
+      run: echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Get environment
+      id: get_env
+      shell: bash
+      run: |
+        if [[ "${{ github.ref_name }}" == "main" ]]; then
+          echo "env=prod" >> $GITHUB_OUTPUT
+          echo "branch=main" >> $GITHUB_OUTPUT
+        else
+          echo "env=dev" >> $GITHUB_OUTPUT
+          echo "branch=develop" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Checkout infrastructure
+      uses: actions/checkout@v4
+      with:
+        repository: krausaerospace/infrastructure
+        ref: ${{ steps.get_env.outputs.branch }}
+        ssh-key: ${{ inputs.ssh_key }}
+
+    - name: Update hash
+      shell: bash
+      run: |
+        yq -i ".infrastructure.\"${{ inputs.component_name }}-hash\" = \"${{ steps.get_hash.outputs.hash }}\"" Pulumi.${{ steps.get_env.outputs.env }}.yaml
+
+    - name: Commit and push
+      shell: bash
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@users.noreply.github.com"
+        git add .
+        git commit -m "Update ${{ inputs.component_name }} hash to ${{ steps.get_hash.outputs.hash }}" || echo "No changes to commit"
+        git push
