@@ -20,7 +20,7 @@ runs:
       id: get_env
       shell: bash
       run: |
-        if [[ "${{ github.ref_name }}" == "main" ]]; then
+        if [[ "${{ github.ref_name }}" == "main" || "${{ github.ref_name }}" == "master" ]]; then
           echo "env=prod" >> $GITHUB_OUTPUT
           echo "branch=main" >> $GITHUB_OUTPUT
         else
