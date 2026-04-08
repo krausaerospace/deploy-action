@@ -38,7 +38,7 @@ runs:
     - name: Update hash
       shell: bash
       run: |
-        yq -i ".infrastructure.\"${{ inputs.component_name }}-hash\" = \"${{ steps.get_hash.outputs.hash }}\"" Pulumi.${{ steps.get_env.outputs.env }}.yaml
+        yq -i ".config.\"infrastructure:${{ inputs.component_name }}-hash\" = \"${{ steps.get_hash.outputs.hash }}\"" Pulumi.${{ steps.get_env.outputs.env }}.yaml
 
     - name: Commit and push
       shell: bash
