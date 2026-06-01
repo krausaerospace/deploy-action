@@ -29,7 +29,7 @@ runs:
         fi
 
     - name: Checkout infrastructure
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: krausaerospace/infrastructure
         ref: ${{ steps.get_env.outputs.branch }}
