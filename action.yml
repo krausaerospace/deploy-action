@@ -4,8 +4,11 @@ inputs:
   component_name:
     description: "The name of the component to update (e.g., command)"
     required: true
-  ssh_key:
-    description: "SSH key for checking out the infrastructure repo"
+  app_id:
+    description: "GitHub App ID"
+    required: true
+  private_key:
+    description: "GitHub App private key"
     required: true
 
 runs:
@@ -28,12 +31,22 @@ runs:
           echo "branch=develop" >> $GITHUB_OUTPUT
         fi
 
+    - name: Create infrastructure repository token
+      id: app-token
+      uses: actions/create-github-app-token@v3
+      with:
+        client-id: ${{ inputs.app_id }}
+        private-key: ${{ inputs.private_key }}
+        owner: krausaerospace
+        repositories: infrastructure
+        permission-contents: write
+
     - name: Checkout infrastructure
       uses: actions/checkout@v6
       with:
         repository: krausaerospace/infrastructure
         ref: ${{ steps.get_env.outputs.branch }}
-        ssh-key: ${{ inputs.ssh_key }}
+        token: ${{ steps.app-token.outputs.token }}
 
     - name: Update hash
       shell: bash
